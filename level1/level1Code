@@ -68,7 +68,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         thread = new Thread(this);
         thread.start();
     }
-
+//load images
+    //P,V/none
     public void loadImages() {
         MediaTracker tracker = new MediaTracker(this);
 
@@ -123,7 +124,7 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         g2.setFont(new Font("Arial", Font.PLAIN, 25));
         g2.setColor(Color.WHITE);
         g2.drawString(String.valueOf(lvl1Points), 785, 840/2 + 100);
-
+//prints dark
         for(int i = 1; i < gameArr.length-1; i++){
             for(int j = 1; j < gameArr[i].length-1;j++){
                 if(((direction=="right"&&gameArr[i][j-1]!='W')||(direction=="left"&&gameArr[i][j+1]!='W')||(direction=="up"&&gameArr[i+1][j]!='W')||(direction=="down"&&gameArr[i-1][j]!='W'))){
@@ -131,7 +132,7 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
                 }
             }
         }
-
+//checks if next is a monster
         if(direction == "left") {
             g2.drawImage(playerImageLeft, wong.x, wong.y, null);
             if(gameArr[wongArrY][wongArrX-1]=='S'){
@@ -230,7 +231,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         System.out.println(key);
         isKeyPressed = true;
     }
-
+//initiazlie the game
+    //P: none, V: none
     public void initializeGame() {
         loadImages();
         wongArrX = wong.x/60;
@@ -243,7 +245,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         generateMon();
         printboardArr();
     }
-
+//prints board array
+    //P,V.none
     public void printboardArr(){
         for(int i = 0; i < gameArr.length; i++){
             for(int j = 0; j < gameArr[i].length;j++){
@@ -252,7 +255,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
             System.out.println();
         }
     }
-
+//generates the monster on array
+    //P,V = none
     public void generateMon(){
         for(int i = 0; i <5;i++){
             int randX = (int)(Math.random()*11)+2;
@@ -287,6 +291,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
     public void keyReleased(KeyEvent e) {
     }
 
+    //runs code
+    //P,R, none
     @Override
     public void run() {
         // start game
@@ -302,7 +308,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
             }
         }
     }
-
+//player movement method
+    //P,R, none
     private void move() {
         if (isKeyPressed) {
 
@@ -369,7 +376,8 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
             go=false;
         }
     }
-
+//checks moneter type
+    //P: char X, R, none
     void checkMonsterType(char x) {
         if(x == 'S') Main.monsterType = 9;
         else if(x == 'B') Main.monsterType = 6;
@@ -377,12 +385,14 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         else if(x == 'E') Main.monsterType = 7;
         System.out.println("x = " + x);
     }
-
+//closes dialogue box
+    //P, R, void
     public static void closeDialogBox(String action) {
         if(action.equals("battle")) battleDialog.dispose();
         if(action.equals("lvl1")) Main.level1Dialog.dispose();
     }
-
+//starts battle
+    //P, V, void
     void startBattle() {
         Battle panel = new Battle(1);
         battleDialog.add(panel);
@@ -394,4 +404,3 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         battleDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
     }
 }
-
