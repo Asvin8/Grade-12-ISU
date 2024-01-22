@@ -1,3 +1,5 @@
+package codeFiles;
+
 import java.awt.Dimension;
 import java.awt.*;
 import java.awt.Graphics;
@@ -10,35 +12,21 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.*;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-
-
+import javax.swing.*;
 
 public class Level1 extends JPanel implements Runnable, KeyListener {
-
-    int screenWidth = 840;
-    int screenHeight = 840;
-
     boolean isKeyPressed = false;
-
     static int speed = 60;
-
     static Image startScreen;
-
     static Image playerImageLeft;
     static Image playerImageRight;
     static Image playerImageUp;
     static Image playerImageDown;
     static Image stringMon,fileMon,binaryMon,exceptionMon;
-
     static Image dark;
-
     static Image computer;
-
     int FPS = 60;
-
+    static JDialog battleDialog = new JDialog(new JFrame(),"battle", true);
     int wongArrY=0;
     int wongArrX=0;
 
@@ -60,24 +48,11 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
     };
 
     Queue <String> monQueue = new LinkedList<>();
-
-
     Thread thread;
-
     Rectangle wong = new Rectangle(60, 60, 30, 50);
-
     ArrayList<Level1Mon> monsterList = new ArrayList<>();
-
-
-
-
-
-
-
     boolean go;
-
     String direction = "down";
-
 
     public Level1() {
         setPreferredSize(new Dimension(840, 840));
@@ -87,51 +62,33 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         thread.start();
     }
 
-    public static void main(String[] args) {
-
-        JFrame frame = new JFrame("Level1");
-        Level1 myPanel = new Level1();
-        frame.add(myPanel);
-        frame.addKeyListener(myPanel);
-        frame.setVisible(true);
-        frame.pack();
-        frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    }
-
     public void loadImages() {
         MediaTracker tracker = new MediaTracker(this);
 
         try {
             // rendering game images
-            startScreen = Toolkit.getDefaultToolkit().getImage("level1back.png");
+            startScreen = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/level1back.png");
             tracker.addImage(startScreen, 0);
-//            enemyImage = Toolkit.getDefaultToolkit().getImage("src/enemy.gif");
-//            tracker.addImage(enemyImage, 2);
-            playerImageRight = Toolkit.getDefaultToolkit().getImage("wongright.png");
+            playerImageRight = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/wongright.png");
             tracker.addImage(playerImageLeft, 1);
-            playerImageLeft = Toolkit.getDefaultToolkit().getImage("wongleft.png");
+            playerImageLeft = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/wongleft.png");
             tracker.addImage(playerImageRight, 2);
-            playerImageUp = Toolkit.getDefaultToolkit().getImage("wongback.png");
+            playerImageUp = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/wongback.png");
             tracker.addImage(playerImageLeft, 3);
-            playerImageDown = Toolkit.getDefaultToolkit().getImage("wongforward.png");
+            playerImageDown = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/wongforward.png");
             tracker.addImage(playerImageRight, 4);
-            computer = Toolkit.getDefaultToolkit().getImage("computer.png");
+            computer = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/computer.png");
             tracker.addImage(computer, 4);
-            exceptionMon = Toolkit.getDefaultToolkit().getImage("exceptionmonster.png");
+            exceptionMon = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/exceptionmonster.png");
             tracker.addImage(computer, 4);
-            fileMon = Toolkit.getDefaultToolkit().getImage("filemonster.png");
+            fileMon = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/filemonster.png");
             tracker.addImage(computer, 4);
-            stringMon = Toolkit.getDefaultToolkit().getImage("stringmonster.png");
+            stringMon = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/stringmonster.png");
             tracker.addImage(computer, 4);
-            binaryMon = Toolkit.getDefaultToolkit().getImage("binaryMonster.png");
+            binaryMon = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/binaryMonster.png");
             tracker.addImage(computer, 4);
-            dark = Toolkit.getDefaultToolkit().getImage("dark.png");
+            dark = Toolkit.getDefaultToolkit().getImage("src/Level1Pics/dark.png");
             tracker.addImage(dark, 4);
-
-
-
 
             System.out.println("Images loaded!");
 
@@ -146,16 +103,19 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
             System.out.println("Error");
         }
     }
-    //checks tmain
-
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+
         g2.drawImage(startScreen, 0, 0, null);
+
         g2.drawString(String.valueOf(speed), 200, 200);
 
-
+        g2.drawImage(Main.mark, 785, 840/2, null);
+        g2.setFont(new Font("Arial", Font.PLAIN, 25));
+        g2.setColor(Color.WHITE);
+        g2.drawString(String.valueOf(Main.points), 785, 840/2 + 100);
 
         for(int i = 1; i < gameArr.length-1; i++){
             for(int j = 1; j < gameArr[i].length-1;j++){
@@ -164,13 +124,6 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
                 }
             }
         }
-
-
-
-
-
-
-
 
         if(direction == "left") {
             g2.drawImage(playerImageLeft, wong.x, wong.y, null);
@@ -246,70 +199,17 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
             else if(wong.y + speed <= 720){
                 g2.drawImage(computer,wong.x,wong.y+speed,null);
             }
-
         }
         AlphaComposite transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
         g2.setComposite(transparency);
-
-
-
-//        // draw stuff on screen
-//        for (int i = 0; i < screen.length; i++) {
-//            for (int j = 0; j < screen[i].length; j++) {
-//
-//                // draw enemies
-//                if (screen[i][j] == 2) {
-//                    int row = j * platformSize;
-//                    int col = i * platformSize;
-//                    g2.drawImage(enemyImage, row, col, null);
-//                }
-//
-//                // draw coin block
-//                else if (screen[i][j] == 3) {
-//                    int row = j * platformSize;
-//                    int col = i * platformSize;
-//                    g2.drawImage(coinBlockImage, row, col, null);
-//                }
-//
-//                else if (screen[i][j] == 4) {
-//                    int row = j * platformSize;
-//                    int col = i * platformSize;
-//                    g2.drawImage(timePowerImage, row, col, null);
-//                }
-//
-//                // draw health
-//                else if (screen[i][j] == 5) {
-//                    int row = j * platformSize;
-//                    int col = i * platformSize;
-//                    g2.drawImage(heartPowerImage, row, col, null);
-//                }
-//            }
-//        }
-
-
     }
 
-
-//    public void moveComputer() {
-//        for (int i = 0; i < projectileRectangle.length; i++) {
-//            if (projectileRectangle[i].x >= screenWidth - 2 * platformSize) {
-//                projectileDirection[i] = -1; // change projectile direction to left
-//            } else if (projectileRectangle[i].x <= platformSize) {
-//                projectileDirection[i] = 1; // change projectile direction right
-//            }
-//            if (projectileDirection[i] == -1)
-//                projectileRectangle[i].x -= projectileSpeed; // projectile moves left
-//            else
-//                projectileRectangle[i].x += projectileSpeed; // projectile moves right
-//        }
-//    }
 
     @Override
     public void keyTyped(KeyEvent e) {
         char key = e.getKeyChar();
         if (key == 'a') { // left
             direction = "left";
-
         } else if (key == 'd') { // right
             direction = "right";
         } else if (key == 'w') { // up
@@ -322,8 +222,6 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         }
         System.out.println(key);
         isKeyPressed = true;
-
-
     }
 
     public void initializeGame() {
@@ -337,8 +235,6 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         monQueue.add("binary");
         generateMon();
         printboardArr();
-
-
     }
 
     public void printboardArr(){
@@ -379,53 +275,29 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
     }
 
     public void keyPressed(KeyEvent e) {
-
     }
 
-//    void keepInBound() {
-//        if (wong.x < 0)
-//            wong.x = 0;
-//        else if (wong.x > screenWidth - wong.width)
-//            wong.x = screenWidth - wong.width;
-//
-//        if (wong.y < 0)
-//            wong.y = 0;
-//        else if (wong.y > screenHeight - wong.height)
-//            wong.y = screenHeight - wong.height;
-//    }
-
-
     public void keyReleased(KeyEvent e) {
-
     }
 
     @Override
     public void run() {
         // start game
-
         initializeGame();
 
-
         while (true) {
-
             move();
-
             this.repaint();
-
             try {
                 Thread.sleep(1000 / FPS);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-
     }
 
     private void move() {
-
         if (isKeyPressed) {
-
 
             if(go) {
                 wongArrX = wong.x/60;
@@ -448,49 +320,69 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
                     hasMoved = true;
                 }
                 //detect battle conditions
-                //asvin
+
                 if (direction == "left" && (wong.x - speed >= 60)&&gameArr[wongArrY][wongArrX-1]!='A'&&gameArr[wongArrY][wongArrX-1]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY][wongArrX-1]);
+                    checkMonsterType(gameArr[wongArrY][wongArrX-1]);
+                    startBattle();
+                    gameArr[wongArrY][wongArrX-1]='A';
                 }
                 else if (direction == "right" && (wong.x + speed <= 720)&&gameArr[wongArrY][wongArrX+1]!='A'&&gameArr[wongArrY][wongArrX+1]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY][wongArrX+1]);
+                    checkMonsterType(gameArr[wongArrY][wongArrX+1]);
+                    startBattle();
+                    gameArr[wongArrY][wongArrX+1]='A';
                 }
 
                 else if (direction == "up" && (wong.y - speed >= 60)&&gameArr[wongArrY-1][wongArrX]!='A'&&gameArr[wongArrY-1][wongArrX]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY-1][wongArrX]);
-                } else if (direction == "down" && (wong.y + speed <= 720)&&gameArr[wongArrY+1][wongArrX]!='A'&&gameArr[wongArrY+1][wongArrX]!='X') {
-                    System.out.println("Battle" + gameArr[wongArrY+1][wongArrX]);
+                    checkMonsterType(gameArr[wongArrY-1][wongArrX]);
+                    startBattle();
+                    gameArr[wongArrY-1][wongArrX]='A';
                 }
+
+                else if (direction == "down" && (wong.y + speed <= 720)&&gameArr[wongArrY+1][wongArrX]!='A'&&gameArr[wongArrY+1][wongArrX]!='X') {
+                    System.out.println("Battle" + gameArr[wongArrY+1][wongArrX]);
+                    checkMonsterType(gameArr[wongArrY+1][wongArrX]);
+                    startBattle();
+                    gameArr[wongArrY+1][wongArrX]='A';
+                }
+
                 //if direction and valid move
                 isKeyPressed = false;
 
                 if (hasMoved) {
-
                     gameArr[wongArrY][wongArrX]='A';
                     wongArrX = wong.x/60;
                     wongArrY = wong.y/60;
                     gameArr[wongArrY][wongArrX]='W';
                     printboardArr();
-
-
-
                 }
             }
             go=false;
-
-
-
-
-
         }
-
     }
 
+    void checkMonsterType(char x) {
+        if(x == 'S') Main.monsterType = 9;
+        else if(x == 'B') Main.monsterType = 6;
+        else if(x == 'F') Main.monsterType = 8;
+        else if(x == 'E') Main.monsterType = 7;
+        System.out.println("x = " + x);
+    }
 
+    public static void closeDialogBox(String action) {
+        if(action.equals("battle")) battleDialog.dispose();
+    }
 
-
-
+    void startBattle() {
+        Battle panel = new Battle(1);
+        battleDialog.add(panel);
+        battleDialog.addKeyListener(panel);
+        battleDialog.setSize(840, 780);
+        battleDialog.setVisible(true);
+        battleDialog.pack();
+        battleDialog.setResizable(true);
+        battleDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    }
 }
-
-
-
