@@ -25,6 +25,7 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
     static Image stringMon,fileMon,binaryMon,exceptionMon;
     static Image dark;
     static Image computer;
+    public static int lvl1Points = 0;
     int FPS = 60;
     static JDialog battleDialog = new JDialog(new JFrame(),"battle", true);
     int wongArrY=0;
@@ -115,7 +116,7 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
         g2.drawImage(Main.mark, 785, 840/2, null);
         g2.setFont(new Font("Arial", Font.PLAIN, 25));
         g2.setColor(Color.WHITE);
-        g2.drawString(String.valueOf(Main.points), 785, 840/2 + 100);
+        g2.drawString(String.valueOf(lvl1Points), 785, 840/2 + 100);
 
         for(int i = 1; i < gameArr.length-1; i++){
             for(int j = 1; j < gameArr[i].length-1;j++){
@@ -284,7 +285,7 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
     public void run() {
         // start game
         initializeGame();
-
+        if(lvl1Points >= 5) closeDialogBox("lvl1");
         while (true) {
             move();
             this.repaint();
@@ -324,28 +325,28 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
                 if (direction == "left" && (wong.x - speed >= 60)&&gameArr[wongArrY][wongArrX-1]!='A'&&gameArr[wongArrY][wongArrX-1]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY][wongArrX-1]);
                     checkMonsterType(gameArr[wongArrY][wongArrX-1]);
-                    startBattle();
                     gameArr[wongArrY][wongArrX-1]='A';
+                    startBattle();
                 }
                 else if (direction == "right" && (wong.x + speed <= 720)&&gameArr[wongArrY][wongArrX+1]!='A'&&gameArr[wongArrY][wongArrX+1]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY][wongArrX+1]);
                     checkMonsterType(gameArr[wongArrY][wongArrX+1]);
-                    startBattle();
                     gameArr[wongArrY][wongArrX+1]='A';
+                    startBattle();
                 }
 
                 else if (direction == "up" && (wong.y - speed >= 60)&&gameArr[wongArrY-1][wongArrX]!='A'&&gameArr[wongArrY-1][wongArrX]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY-1][wongArrX]);
                     checkMonsterType(gameArr[wongArrY-1][wongArrX]);
-                    startBattle();
                     gameArr[wongArrY-1][wongArrX]='A';
+                    startBattle();
                 }
 
                 else if (direction == "down" && (wong.y + speed <= 720)&&gameArr[wongArrY+1][wongArrX]!='A'&&gameArr[wongArrY+1][wongArrX]!='X') {
                     System.out.println("Battle" + gameArr[wongArrY+1][wongArrX]);
                     checkMonsterType(gameArr[wongArrY+1][wongArrX]);
-                    startBattle();
                     gameArr[wongArrY+1][wongArrX]='A';
+                    startBattle();
                 }
 
                 //if direction and valid move
@@ -373,16 +374,18 @@ public class Level1 extends JPanel implements Runnable, KeyListener {
 
     public static void closeDialogBox(String action) {
         if(action.equals("battle")) battleDialog.dispose();
+        if(action.equals("lvl1")) Main.level1Dialog.dispose();
     }
 
     void startBattle() {
         Battle panel = new Battle(1);
         battleDialog.add(panel);
         battleDialog.addKeyListener(panel);
-        battleDialog.setSize(840, 780);
+        battleDialog.setSize(840, 840);
         battleDialog.setVisible(true);
         battleDialog.pack();
         battleDialog.setResizable(true);
         battleDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
     }
 }
+
