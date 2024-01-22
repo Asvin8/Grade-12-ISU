@@ -25,6 +25,10 @@ public class Battle extends JPanel implements Runnable, KeyListener {
     String outputMessage = "Battle commences....."; // Initial output message
     String curQuestion="", curAns = ""; // Current question and answer
 
+    public static HashMap<String, String> Level1Questions = new HashMap<>();
+    public static HashMap<String, String> Level2Questions = new HashMap<>();
+    public static HashMap<String, String> Level3Questions = new HashMap<>();
+
     /**
      * Constructor for Battle class.
      * @param level is the Level of the battle
@@ -32,6 +36,19 @@ public class Battle extends JPanel implements Runnable, KeyListener {
     public Battle(int level) {
         setPreferredSize(new Dimension(screenWidth, screenHeight));
         setVisible(true);
+
+        Level1Questions.put("An advantage of BufferedReader over Scanner is that it’s faster.", "T");
+        Level1Questions.put("When using PrintWriter and a file which is being called does not exist, an error is returned. ", "F");
+        Level1Questions.put("When using PrintWriter, if a file being called already exists, by default it will be overwritten unless you add a flag of true", "T");
+        Level1Questions.put("The following exceptions should be caught in this order: FileNotFoundException, IOException, Exception", "T");
+        Level1Questions.put("A signed bit of 1 indicates a positive number in binary", "F");
+        Level1Questions.put("101011 base 2 is equivalent to 43 in base 10", "T");
+        Level1Questions.put("123 base 10 is equivalent to 1011011 base 2", "F");
+        Level1Questions.put("-43 base 10 is equivalent to 11010111 in base 2", "F");
+        Level1Questions.put("Smallest value that can be stored in a 10 bit variable type is -2^9", "T");
+        Level1Questions.put("5.43 * 10^9 fits in an integer for java", "F");
+        Level1Questions.put("The following lines of code will output 34: StringBuilder s = new StringBuilder(); s.ensureCapacity(20); System.out.println(s.capacity());", "T");
+        Level1Questions.put("StringBuilders can be directly compared to each other using equals() or compareTo()", "F");
 
         this.level = level;
         thread = new Thread(this);
