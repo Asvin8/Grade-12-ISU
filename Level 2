@@ -1,8 +1,4 @@
-/*
- * Names: Asvin and Alex
- * Date: Tuesday, January 24, 2023
- * This is our isu project called voyagers.
- */
+package codeFiles;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -15,54 +11,47 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.File;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import java.util.HashMap;
+import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class Main extends JPanel implements Runnable, KeyListener {
+public class Level2 extends JPanel implements Runnable, KeyListener {
 
     Thread thread;
     int FPS = 60;
-    int screenWidth = 700;
-    int screenHeight = 700;
+    int screenWidth = 840;
+    int screenHeight = 780;
 
     // stats
     int lives = 3;
-    int coins = 0;
-    int highScore = coins;
+
+    Rectangle player = new Rectangle(0, 0, 30, 50);
+
+    // size of each platform block
+    final int platformSize = 60;
 
     // player variables
-    Rectangle player = new Rectangle(0, 0, 30, 50);
-    boolean left, right, up, down, jump;
-    double xVel = 0, yVel = 0;
-    double scale = 2;
+    boolean left, right, jump;
+    boolean directionFacing = false; // left is true, right is false
+    double yVel = 0;
+    double scale = 2.4;
     double airSpeed = 0;
     double gravity = 0.4 * scale;
     double jumpSpeed = -5.3 * scale;
-    double playerSpeed = 2.0;
+    double playerSpeed = 4.0;
     boolean inAir = false;
-    int startingXPlayer = 70, startingYPlayer = 349-(int)player.getHeight();
+    int startingXPlayer = platformSize, startingYPlayer = (int)(5*platformSize-player.getHeight()-1);
 
     // images in program
     Image background;
     Image platformImage;
-    Image enemyImage;
+    Image arrayListEnemyImage, searchEnemyImage, unknownMonsterImage, comparatorMonsterImage;
     Image playerImageLeft, playerImageRight;
-    Image coinBlockImage;
-    Image timePowerImage;
-    Image heartPowerImage;
     Image heartImage;
-    Image coinImage;
 
     // keeps track of which screen to use
     static int screenType = 1;
+    static JFrame frame;
 
     /*
      * Here is the key we will use to determine which screen is used at the moment:
@@ -82,84 +71,31 @@ public class Main extends JPanel implements Runnable, KeyListener {
     Image startScreen;
     Image backgroundImage1, backgroundImage2, backgroundImage3, backgroundImage4;
 
-    // size of each platform block
-    final int platformSize = 70;
-
     /**
      * This is the array that models the objects on the screen
      * Notation:
      * 0 --> empty
      * 1 --> platform
-     * 2 --> enemy
-     * 3 --> coin block
-     * 4 --> time power block
-     * 5 --> health power block
+     * 2 --> arraylist monster
+     * 3 --> search monster
+     * 4 --> comparator monster
+     * 5 --> unknown monster
      */
-    int[][] screen = new int[10][10];
-    final int ENEMY = 2;
-    final int COINBLOCK = 3;
-    final int COINUPGRADE = 4;
-    final int HEALTHBLOCK = 5;
+    int[][] screen = new int[screenHeight/platformSize][screenWidth/platformSize];
 
     // platforms
-    Platform[] platforms = new Platform[10];
+    Platform[] platforms = new Platform[screen.length];
+    public static JDialog battleDialog;
 
-    // Position of every enemy
-    Enemy[] enemyPos = new Enemy[20];
+    public Level2() {
 
-    // helps with collision detection of enemies
-    Rectangle[] enemyRectangles = new Rectangle[20];
-
-    // coinBlock position and rectangle
-    coinBlock[] coinBlockPos = new coinBlock[4];
-    Rectangle[] coinBlockRectangle = new Rectangle[4];
-
-    // coinBlock position and rectangle
-    timePower[] timePowerPos = new timePower[2];
-    Rectangle[] timePowerRectangle = new Rectangle[2];
-
-    // coinBlock position and rectangle
-    heartPower[] heartPowerPos = new heartPower[2];
-    Rectangle[] heartPowerRectangle = new Rectangle[2];
-
-    Clip backgroundMusic, defeatSound, damageSound, coinSound;
-
-    public Main() {
-        setPreferredSize(new Dimension(700, 700));
+        setPreferredSize(new Dimension(screenWidth, screenHeight));
         setVisible(true);
 
         // variables that help keep track of keystrokes
         jump = false;
         left = false;
         right = false;
-
-        // import the sounds into the program and assign them to variables
-        try {
-
-            // background music
-            AudioInputStream sound = AudioSystem.getAudioInputStream(new File("src/gameSong.wav"));
-            backgroundMusic = AudioSystem.getClip();
-            //backgroundMusic.open(sound);
-
-            // defeat music
-            sound = AudioSystem.getAudioInputStream(new File("src/defeatSound.wav"));
-            defeatSound = AudioSystem.getClip();
-            defeatSound.open(sound);
-
-            // damage sound
-            sound = AudioSystem.getAudioInputStream(new File("src/damageSound.wav"));
-            damageSound = AudioSystem.getClip();
-            damageSound.open(sound);
-
-            // coin sound
-            sound = AudioSystem.getAudioInputStream(new File("src/coinSound.wav"));
-            coinSound = AudioSystem.getClip();
-            coinSound.open(sound);
-
-        } catch (Exception e) {
-            System.out.println("----------------------\nERROR OCCURED\n--------------------");
-            System.exit(1);
-        }
 
         thread = new Thread(this);
         thread.start();
@@ -191,134 +127,90 @@ public class Main extends JPanel implements Runnable, KeyListener {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
-        // start screen
-        if (screenType == 1) {
-            g2.drawImage(startScreen, 0, 0, null);
+        if (screenType == 1) { // background 1
+            g2.drawImage(backgroundImage1, 0, 0, null);
+        } else if (screenType == 2) { // background 2
+            g2.drawImage(backgroundImage2, 0, 0, null);
+        } else if (screenType == 3) { // background 3
+            g2.drawImage(backgroundImage3, 0, 0, null);
+        } else if (screenType == 4) { // background 3
+            g2.drawImage(backgroundImage4, 0, 0, null);
         }
 
-        // instructions screen
-        else if (screenType == 2) {
-            g2.drawImage(instructionsScreen, 0, 0, null);
-        }
-
-        // about page
-        else if (screenType == 3) {
-            g2.drawImage(aboutScreen, 0, 0, null);
-        }
-
-        // game over screen
-        else if (screenType == 4) {
-            g2.drawImage(gameOverScreen, 0, 0, null);
-            g2.setColor(new Color(255, 255, 255));
-            g2.setFont(new Font("Arial", Font.BOLD, 80));
-            g2.drawString("" + coins, 320, 625);
-            highScore = Math.max(highScore, coins);
-            g2.drawString("" + highScore, 440, 690);
-        }
-
-        // background screen (game is in progress)
-        else {
-
-            if (screenType == 5) { // background 1
-                g2.drawImage(backgroundImage1, 0, 0, null);
-            } else if (screenType == 6) { // background 2
-                g2.drawImage(backgroundImage2, 0, 0, null);
-            } else if (screenType == 7) { // background 3
-                g2.drawImage(backgroundImage3, 0, 0, null);
-            } else if (screenType == 8) { // background 3
-                g2.drawImage(backgroundImage4, 0, 0, null);
-            }
-
-            // draw platforms
-            AlphaComposite transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
-            g2.setComposite(transparency);
-            for (int i = 0; i < screen.length; i++) {
-                for (int j = 0; j < screen[i].length; j++) {
-                    if (screen[i][j] == 1) {
-                        transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0f);
-                        g2.setComposite(transparency);
-                        g2.drawRect(j * platformSize, i * platformSize, platformSize, platformSize);
-                        transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
-                        g2.setComposite(transparency);
-                        g2.drawImage(platformImage, j * platformSize, i * platformSize, null);
-                    }
+        // draw platforms
+        AlphaComposite transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
+        g2.setComposite(transparency);
+        for (int i = 0; i < screen.length; i++) {
+            for (int j = 0; j < screen[i].length; j++) {
+                if (screen[i][j] == 1) {
+                    transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0f);
+                    g2.setComposite(transparency);
+                    g2.drawRect(j * platformSize, i * platformSize, platformSize, platformSize);
+                    transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
+                    g2.setComposite(transparency);
+                    g2.drawImage(platformImage, j * platformSize, i * platformSize, null);
                 }
             }
+        }
 
-            // draw stuff on screen
-            for (int i = 0; i < screen.length; i++) {
-                for (int j = 0; j < screen[i].length; j++) {
+        // draw stuff on screen
+        for (int i = 0; i < screen.length; i++) {
+            for (int j = 0; j < screen[i].length; j++) {
 
-                    // draw enemies
-                    if (screen[i][j] == 2) {
-                        int row = j * platformSize;
-                        int col = i * platformSize;
-                        g2.drawImage(enemyImage, row, col, null);
-                    }
-
-                    // draw coin block
-                    else if (screen[i][j] == 3) {
-                        int row = j * platformSize;
-                        int col = i * platformSize;
-                        g2.drawImage(coinBlockImage, row, col, null);
-                    }
-
-                    else if (screen[i][j] == 4) {
-                        int row = j * platformSize;
-                        int col = i * platformSize;
-                        g2.drawImage(timePowerImage, row, col, null);
-                    }
-
-                    // draw health
-                    else if (screen[i][j] == 5) {
-                        int row = j * platformSize;
-                        int col = i * platformSize;
-                        g2.drawImage(heartPowerImage, row, col, null);
-                    }
+                // draw enemies
+                if (screen[i][j] == 2) {
+                    int row = j * platformSize;
+                    int col = i * platformSize;
+                    g2.drawImage(arrayListEnemyImage, row, col, null);
+                } else if (screen[i][j] == 3) {
+                    int row = j * platformSize;
+                    int col = i * platformSize;
+                    g2.drawImage(searchEnemyImage, row, col, null);
+                } else if (screen[i][j] == 4) {
+                    int row = j * platformSize;
+                    int col = i * platformSize;
+                    g2.drawImage(comparatorMonsterImage, row, col, null);
+                } else if (screen[i][j] == 5) {
+                    int row = j * platformSize;
+                    int col = i * platformSize;
+                    g2.drawImage(unknownMonsterImage, row, col, null);
                 }
             }
-
-            // draw hearts
-            if (lives >= 1)
-                g2.drawImage(heartImage, 630, 440, null);
-
-            if (lives >= 2)
-                g2.drawImage(heartImage, 630, 410, null);
-
-            if (lives >= 3) {
-                g2.drawImage(heartImage, 630, 380, null);
-                lives = 3;
-            }
-
-            if (lives == 0) { // player has lost
-                screenType = 4;
-                defeatSound.setFramePosition(0);
-                defeatSound.start();
-                lives = 3;
-            }
-
-            // draw transparent rectangle around player
-            transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0f);
-            g2.setComposite(transparency);
-            g2.draw(player);
-
-            // draw player
-            transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
-            g2.setComposite(transparency);
-
-            // determines which direction the player is facing
-            if (left) {
-                g2.drawImage(playerImageLeft, player.x, player.y, null);
-            } else {
-                g2.drawImage(playerImageRight, player.x, player.y, null);
-            }
-
-            // draw coin
-            g2.drawImage(coinImage, 630, 300, null);
-            g2.setColor(new Color(255, 255, 255));
-            g2.setFont(new Font("Arial", Font.BOLD, 40));
-            g2.drawString("" + coins, 645, 430);
         }
+
+        g2.drawImage(Main.mark, 785, 840/2, null);
+        g2.setFont(new Font("Arial", Font.PLAIN, 25));
+        g2.setColor(Color.WHITE);
+        g2.drawString(String.valueOf(Main.points), 785, 840/2 + 100);
+
+        // draw hearts
+        if (lives >= 1)
+            g2.drawImage(heartImage, screenWidth-platformSize, 440, null);
+
+        if (lives >= 2)
+            g2.drawImage(heartImage, screenWidth-platformSize, 410, null);
+
+        if (lives >= 3) {
+            g2.drawImage(heartImage, screenWidth-platformSize, 380, null);
+            lives = 3;
+        }
+
+        // draw transparent rectangle around player
+        transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0f);
+        g2.setComposite(transparency);
+        g2.draw(player);
+
+        // draw player
+        transparency = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
+        g2.setComposite(transparency);
+
+        // determines which direction the player is facing
+        if (directionFacing) {
+            g2.drawImage(playerImageLeft, player.x, player.y, null);
+        } else {
+            g2.drawImage(playerImageRight, player.x, player.y, null);
+        }
+
     }
 
     // This method initializes the game when it starts
@@ -330,9 +222,9 @@ public class Main extends JPanel implements Runnable, KeyListener {
         loadBackgroundAndPlatforms();
         generatePlatforms();
         generateEnemy();
-        generateCoinBlock();
-        generateTimePower();
-        generateHeartPower();
+        right = false;
+        directionFacing = false;
+        jump = false;
     }
 
     // This function resets the screen array
@@ -351,178 +243,75 @@ public class Main extends JPanel implements Runnable, KeyListener {
         try {
 
             // rendering game images
-            backgroundImage1 = Toolkit.getDefaultToolkit().getImage("src/back1.gif");
+            backgroundImage1 = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/back1.png");
             tracker.addImage(background, 0);
-            platformImage = Toolkit.getDefaultToolkit().getImage("src/platformImage.gif");
+            platformImage = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/platformImage.png");
             tracker.addImage(platformImage, 1);
-            enemyImage = Toolkit.getDefaultToolkit().getImage("src/enemy.gif");
-            tracker.addImage(enemyImage, 2);
-            playerImageLeft = Toolkit.getDefaultToolkit().getImage("src/playLeft.gif");
-            tracker.addImage(playerImageLeft, 3);
-            playerImageRight = Toolkit.getDefaultToolkit().getImage("src/playRight.gif");
-            tracker.addImage(playerImageRight, 4);
-            coinBlockImage = Toolkit.getDefaultToolkit().getImage("src/coinBlock.gif");
-            tracker.addImage(coinBlockImage, 5);
-            timePowerImage = Toolkit.getDefaultToolkit().getImage("src/timePower.gif");
-            tracker.addImage(coinBlockImage, 6);
-            heartPowerImage = Toolkit.getDefaultToolkit().getImage("src/heartPower.gif");
-            tracker.addImage(heartPowerImage, 7);
-            backgroundImage2 = Toolkit.getDefaultToolkit().getImage("src/back2.gif");
+            searchEnemyImage = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/ArrayListMonster.png");
+            tracker.addImage(arrayListEnemyImage, 2);
+            arrayListEnemyImage = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/SearchMonster.png");
+            tracker.addImage(searchEnemyImage, 3);
+            playerImageLeft = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/wongleft.png");
+            tracker.addImage(playerImageLeft, 4);
+            playerImageRight = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/wongright.png");
+            tracker.addImage(playerImageRight, 5);
+            backgroundImage2 = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/back2.png");
+            tracker.addImage(background, 6);
+            backgroundImage3 = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/back3.png");
+            tracker.addImage(background, 7);
+            backgroundImage4 = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/back4.png");
+            tracker.addImage(background, 8);
+            unknownMonsterImage = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/unknownMonster.png");
             tracker.addImage(background, 9);
-            backgroundImage3 = Toolkit.getDefaultToolkit().getImage("src/back3.gif");
+            comparatorMonsterImage = Toolkit.getDefaultToolkit().getImage("src/Level2Pics/ComparatorMonster.png");
             tracker.addImage(background, 10);
-            backgroundImage4 = Toolkit.getDefaultToolkit().getImage("src/back4.gif");
-            tracker.addImage(background, 11);
-
-            // rendering screen images
-            startScreen = Toolkit.getDefaultToolkit().getImage("src/backHome.gif");
-            tracker.addImage(startScreen, 12);
-            gameOverScreen = Toolkit.getDefaultToolkit().getImage("src/backdefeat.gif");
-            tracker.addImage(gameOverScreen, 13);
-            instructionsScreen = Toolkit.getDefaultToolkit().getImage("src/howto.gif");
-            tracker.addImage(instructionsScreen, 14);
-            heartImage = Toolkit.getDefaultToolkit().getImage("src/heart1.gif");
-            tracker.addImage(aboutScreen, 15);
-            coinImage = Toolkit.getDefaultToolkit().getImage("src/coin.gif");
-            tracker.addImage(aboutScreen, 16);
-            aboutScreen = Toolkit.getDefaultToolkit().getImage("src/about.gif");
-            tracker.addImage(aboutScreen, 17);
-            tracker.addImage(background, 18);
 
         } catch (Exception e) {
             System.out.println("Error loading images");
         }
 
         // make sure the images are loaded before continuing
-        try {
-            tracker.waitForAll();
-        } catch (InterruptedException e) {
-        }
+        try { tracker.waitForAll(); }
+        catch (InterruptedException e) { }
     }
 
     // This function generates random platforms of varying lengths at every row in an array
     public void generatePlatforms() {
 
         // platform that player stands on
-        platforms[1] = new Platform(platformSize, platformSize * 5, 1);
+        platforms[1] = new Platform(platformSize, platformSize * 5);
         screen[5][1] = 1;
         int x=0, curBlockPlace=0, upAmt=0;
 
         // add 1 platform per column either above or below player
         for(int i = 2; i < screen[0].length-1; i++) {
-            System.out.println();
-            x = (int) (Math.random() * 4) + 1;
+            x = (int) (Math.random() * 8) + 1;
             upAmt = -1;
-            if(x==3) upAmt = 1;
-            else if(x==4) upAmt = 2;
-            System.out.println(i);
+            if(x>=3) upAmt = x-2;
             curBlockPlace = (int)(Math.ceil(10*platforms[i-1].y/screenHeight) + upAmt);
-            if(curBlockPlace < screen.length && curBlockPlace > 1) {
+            if(curBlockPlace < screen.length - 1 && curBlockPlace > 1) {
                 screen[curBlockPlace][i] = 1;
-                platforms[i] = new Platform(i*platformSize, curBlockPlace*platformSize, 1);
+                platforms[i] = new Platform(i*platformSize, curBlockPlace*platformSize);
             }
             else i--;
         }
-
     }
 
     // enemy generation
     void generateEnemy() {
-        enemyRectangles[0] = new Rectangle(0, 0, 0, 0);
-        enemyPos[0] = new Enemy(0, 0);
-        enemyPos[1] = new Enemy(0, 0);
         for (int i = 2; i < screen.length; i++) {
             for (int j = 0; j < screen[i].length; j++) {
                 if(i==5 && j==1) continue;
                 else if (screen[i][j] == 1 && screen[i - 1][j] == 0) {
-                    int randNum = (int) (Math.random() * 2) + 1; // 1/2 chance to spawn enemy
+                    int randNum = (int) (Math.random() * 2) + 1; // 1/2 chance to spawn
                     if (randNum == 1) {
-                        screen[i - 1][j] = 2;
-                        enemyPos[i] = new Enemy(i - 1, j);
-                        enemyRectangles[i] = new Rectangle();
+                        int enemyToDraw = (int)(Math.random()*4) + 1;
+                        if(enemyToDraw == 1) screen[i-1][j] = 2;
+                        else if(enemyToDraw == 2) screen[i-1][j] = 3;
+                        else if(enemyToDraw == 3) screen[i-1][j] = 4;
+                        else if(enemyToDraw == 4) screen[i-1][j] = 5;
                     }
                 }
-            }
-        }
-    }
-
-    // generate coin block
-    public void generateCoinBlock() {
-        int randX = 0;
-        int randY = 0;
-        boolean isFilled = true;
-        coinBlockRectangle[0] = new Rectangle(0, 0, 0, 0);
-        coinBlockPos[0] = new coinBlock(0, 0);
-
-        // generate random num of coins 1-4
-        int randNum = (int) (Math.random() * 3) + 1;
-        // choose coordinate that is not occupied
-        for (int i = 0; i < randNum; i++) {
-            isFilled = true;
-            while (isFilled) {
-                randX = (int) (Math.random() * 9) + 1;
-                randY = (int) (Math.random() * 8) + 1;
-                if (screen[randX][randY] == 0) {
-                    isFilled = false;
-                }
-            }
-            screen[randX][randY] = 3;
-            coinBlockPos[i] = new coinBlock(randX, randY);
-            screen[randX][randY] = 3;
-            coinBlockRectangle[i] = new Rectangle();
-        }
-    }
-
-    // generate time power up
-    public void generateTimePower() {
-        int randX = 0;
-        int randY = 0;
-        boolean isFilled = true;
-        timePowerRectangle[0] = new Rectangle(0, 0, 0, 0);
-        timePowerPos[0] = new timePower(0, 0);
-
-        // generate random num of timePower (1/4 chance)
-        int randNum = (int) (Math.random() * 2) + 1;
-        if (randNum == 1) {
-            while (isFilled) {
-                randX = (int) (Math.random() * 9) + 1;
-                randY = (int) (Math.random() * 8) + 1;
-                if (screen[randX][randY] != 0) {
-                    isFilled = false;
-                    break;
-                }
-                screen[randX][randY] = 4;
-                timePowerPos[0] = new timePower(randX, randY);
-                timePowerRectangle[0] = new Rectangle();
-                return;
-            }
-        }
-    }
-
-    // This function generates the health powers on the actual screen and in the
-    // screen array
-    public void generateHeartPower() {
-        int randX = 0;
-        int randY = 0;
-        boolean isFilled = true;
-        heartPowerRectangle[0] = new Rectangle(0, 0, 0, 0);
-        heartPowerPos[0] = new heartPower(0, 0);
-
-        // generate random num of timePower (1/4 chance)
-        int randNum = (int) (Math.random() * 2) + 1;
-        if (randNum == 1) {
-            while (isFilled) {
-                randX = (int) (Math.random() * 9) + 1;
-                randY = (int) (Math.random() * 8) + 1;
-                if (screen[randX][randY] != 0) {
-                    isFilled = false;
-                    break;
-                }
-                // insert health power in screen array
-                screen[randX][randY] = 5;
-                heartPowerPos[0] = new heartPower(randX, randY);
-                heartPowerRectangle[0] = new Rectangle();
-                return;
             }
         }
     }
@@ -536,27 +325,14 @@ public class Main extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        if (key == KeyEvent.VK_A && screenType >= 5) { // left
+        if (key == KeyEvent.VK_A) { // left
             left = true;
-            right = false;
+            directionFacing = true;
         } else if (key == KeyEvent.VK_D) { // right
             right = true;
-            left = false;
+            directionFacing = false;
         } else if (key == KeyEvent.VK_W) { // jump
             jump = true;
-        } else if (key == KeyEvent.VK_P && screenType == 1) { // play game
-            screenType = 5;
-            coins = 0;
-        } else if (key == KeyEvent.VK_H && screenType == 1) { // instructions
-            screenType = 2;
-        } else if (key == KeyEvent.VK_A && screenType == 1) { // about page
-            screenType = 3;
-        } else if (key == KeyEvent.VK_R && screenType == 2) { // return to home page
-            screenType = 1;
-        } else if (key == KeyEvent.VK_R && screenType == 3) { // return to home page
-            screenType = 1;
-        } else if (key == KeyEvent.VK_R && screenType == 4) { // return to home page
-            screenType = 1;
         }
     }
 
@@ -569,19 +345,11 @@ public class Main extends JPanel implements Runnable, KeyListener {
             right = false;
         } else if (key == KeyEvent.VK_W) {
             jump = false;
-        } else if (key == KeyEvent.VK_P && screenType == 1) { // play game
-            screenType = 5;
-        } else if (key == KeyEvent.VK_H && screenType == 1) { // instructions
-            screenType = 2;
-        } else if (key == KeyEvent.VK_A && screenType == 1) { // about page
-            screenType = 3;
-        } else if (key == KeyEvent.VK_R && screenType == 2) { // return to home page
-            screenType = 1;
-        } else if (key == KeyEvent.VK_R && screenType == 3) { // return to home page
-            screenType = 1;
-        } else if (key == KeyEvent.VK_R && screenType == 4) { // return to home page
-            screenType = 1;
         }
+    }
+
+    public static void closeDialogBox(String action) {
+        if(action.equals("battle")) battleDialog.dispose();
     }
 
     // This function handles the movement of the player
@@ -593,14 +361,26 @@ public class Main extends JPanel implements Runnable, KeyListener {
 
         // player reaches bottom of screen
         if (player.y + player.height >= screenHeight) {
-            int randNum = (int) (Math.random() * 4) + 5; // 1/2 chance to spawn enemy
+            int randNum = (int) (Math.random() * 4-1+1) + 1; // 1/2 chance to spawn enemy
             screenType = randNum;
             initializeGame();
         }
 
-        // detecting if player is hitting something
-        int curRow = (int) (player.y / platformSize), curCol = (int) (player.x / platformSize);
+        // detecting if player is hitting monster
+        int curRow = player.y / platformSize, curCol = player.x / platformSize;
         if (screen[curRow][curCol] > 1) {
+            Main.monsterType = screen[curRow][curCol];
+            System.out.println("battle should run");
+            battleDialog = new JDialog(frame,"battle", true);
+            Battle panel = new Battle(2);
+            battleDialog.add(panel);
+            battleDialog.addKeyListener(panel);
+            battleDialog.setSize(840, 780);
+            battleDialog.setVisible(true);
+            battleDialog.pack();
+            battleDialog.setResizable(true);
+            battleDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            startedABattle = true;
             collision(screen[curRow][curCol]);
             screen[curRow][curCol] = 0;
         }
@@ -625,11 +405,9 @@ public class Main extends JPanel implements Runnable, KeyListener {
                 inAir = true;
             }
         }
-
         if (CanMoveHere(player.x, player.y + airSpeed)) {
             player.y += airSpeed;
             airSpeed += gravity;
-            updateXPos(xSpeed);
         } else {
             player.y = (int) GetEntityYPosUnderRoofOrAboveFloor(airSpeed);
             if (airSpeed > 0)
@@ -637,29 +415,14 @@ public class Main extends JPanel implements Runnable, KeyListener {
             else
                 airSpeed = 0;
         }
-
         updateXPos(xSpeed);
     }
 
+    boolean startedABattle = false;
+
     void collision(int item) {
-        if (item == ENEMY) { // enemy
-            lives--;
-            damageSound.setFramePosition(0);
-            damageSound.start();
-            initializeGame();
-        } else if (item == COINBLOCK) { // coins
-            coins++;
-            coinSound.setFramePosition(0);
-            coinSound.start();
-        } else if (item == HEALTHBLOCK) { // health boost
-            lives++;
-            coinSound.setFramePosition(0);
-            coinSound.start();
-        } else if (item == COINUPGRADE) { // time boost
-            coins += 5;
-            coinSound.setFramePosition(0);
-            coinSound.start();
-        }
+        lives--;
+        initializeGame();
     }
 
     // This function detects of player is on floor
@@ -689,10 +452,9 @@ public class Main extends JPanel implements Runnable, KeyListener {
      * @return location of y coordinate of nearest platform
      */
     double GetEntityYPosUnderRoofOrAboveFloor(double airSpeed) {
-        int currentPlatform = (int) (player.y / platformSize);
         if (airSpeed > 0) { // falling
-            int platformYPos = currentPlatform * platformSize;
-            int yOffset = (int) (platformSize - player.height);
+            int platformYPos = (player.y/platformSize) * platformSize;
+            int yOffset = platformSize - player.height;
             return platformYPos + yOffset - 1;
         } else { // jumping
             return player.y + gravity;
@@ -709,7 +471,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
         int currentPlatform = (int) (player.x / platformSize);
         if (xSpeed > 0) { // right
             int platformXPos = currentPlatform * platformSize;
-            int xOffset = (int) (platformSize - player.width);
+            int xOffset = platformSize - player.width;
             return platformXPos + xOffset - 1;
         } else { // left
             int platformXPos = (currentPlatform) * platformSize;
@@ -732,7 +494,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
      * This function determines if it is possible for a player to move to a location
      * @param xPos current x coordinate of player
      * @param yPos current y coordinate of player
-     * @return whether or not the player can move to specified location
+     * @return whether the player can move to specified location
      */
     boolean CanMoveHere(double xPos, double yPos) {
         if (!isPlatform(xPos, yPos)) { // check top left corner
@@ -751,14 +513,10 @@ public class Main extends JPanel implements Runnable, KeyListener {
      * This function checks if current square is platform or not
      * @param x coordinate
      * @param y coordinate
-     * @return whether or not the current pos is platform
+     * @return whether the current pos is platform
      */
     boolean isPlatform(double x, double y) {
         int xPos = (int) (x / platformSize), yPos = (int) (y / platformSize);
-        if (xPos >= 10)
-            xPos = 9;
-        if (yPos >= 10)
-            yPos = 9;
         if (screen[yPos][xPos] == 1)
             return true;
         return false;
@@ -766,82 +524,29 @@ public class Main extends JPanel implements Runnable, KeyListener {
 
     // This function keeps the player within the boundaries
     void keepInBound() {
-        if (player.x < 70) {
-            player.x = 70;
-        } else if (player.x > screenWidth - player.width - 70) {
+        if (player.x < platformSize) {
+            player.x = platformSize;
+        } else if (player.x > screenWidth - player.width - platformSize) {
             initializeGame();
         }
 
         if (player.y < 0) {
             player.y = 0;
             yVel = 0;
-        } else if (player.y > screenHeight - player.height) {
+        } else if (player.y > screenHeight - player.height - 100) {
             player.y = screenHeight - player.height;
             inAir = false;
             yVel = 0;
         }
     }
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Alex and Asvin ISU");
-        Main myPanel = new Main();
-        frame.add(myPanel);
-        frame.addKeyListener(myPanel);
-        frame.setVisible(true);
-        frame.pack();
-        frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    }
 }
 
-// Platform class
 class Platform {
     int x, y, len;
 
-    public Platform(int x, int y, int len) {
-        this.x = x;
-        this.y = y;
-        this.len = len;
-    }
-}
-
-// Enemy class
-class Enemy {
-    int x, y;
-
-    public Enemy(int x, int y) {
+    public Platform(int x, int y) {
         this.x = x;
         this.y = y;
     }
 }
 
-// Coin block class
-class coinBlock {
-    int x, y;
-
-    public coinBlock(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-
-// Time powerup class
-class timePower {
-    int x, y;
-
-    public timePower(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-
-// Heart class
-class heartPower {
-    int x, y;
-
-    public heartPower(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-}
