@@ -11,11 +11,11 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import javax.sound.sampled.*;
 import javax.swing.*;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 
 @SuppressWarnings("serial")
 public class Main extends JPanel implements Runnable, KeyListener {
@@ -40,10 +40,27 @@ public class Main extends JPanel implements Runnable, KeyListener {
     public static int monsterType=0;
 
     public static int points = 0;
+    static JDialog level1Dialog;
+    static JDialog level2Dialog;
+    static JDialog level3Dialog;
+    Clip backgroundMusic;
 
     public Main() {
         setPreferredSize(new Dimension(screenWidth, screenHeight));
         setVisible(true);
+
+        try {
+            // background music
+            AudioInputStream sound = AudioSystem.getAudioInputStream(new File("src/BackgroundMusic.wav"));
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(sound);
+        } catch (UnsupportedAudioFileException e) {
+            throw new RuntimeException(e);
+        } catch (LineUnavailableException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         thread = new Thread(this);
         thread.start();
@@ -53,6 +70,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
     @Override
     public void run() {
         loadBackgroundAndPlatforms();
+        backgroundMusic.start();
         while (true) {
             this.repaint();
             try {
@@ -67,6 +85,9 @@ public class Main extends JPanel implements Runnable, KeyListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+
+
+        points = Level1.lvl1Points + Level2.lvl2Points + Level3.lvl3Points;
 
         // start screen
         if (screenType == 1) {
@@ -97,7 +118,14 @@ public class Main extends JPanel implements Runnable, KeyListener {
         else if (screenType == 6) {
             g2.drawImage(GameOver, 0, 0, null);
         }
+
+        g2.drawImage(mark, 785, 840/2, null);
+        g2.setFont(new Font("Arial", Font.PLAIN, 25));
+        g2.setColor(Color.WHITE);
+        g2.drawString(String.valueOf(points), 785, 840/2 + 100);
+
     }
+
 
     // render background and platforms
     public void loadBackgroundAndPlatforms() {
@@ -166,7 +194,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
 
         // level 1
         else if (key == KeyEvent.VK_1 && screenType == 5) {
-            JDialog level1Dialog = new JDialog(frame, "Level 1", true);
+            level1Dialog = new JDialog(frame, "Level 1", true);
             Level1 myPanel = new Level1();
             level1Dialog.add(myPanel);
             level1Dialog.addKeyListener(myPanel);
@@ -179,7 +207,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
 
         // level 2
         else if (key == KeyEvent.VK_2 && screenType == 5) {
-            JDialog level2Dialog = new JDialog(frame, "Level 2", true);
+            level2Dialog = new JDialog(frame, "Level 2", true);
             Level2 myPanel = new Level2();
             level2Dialog.add(myPanel);
             level2Dialog.addKeyListener(myPanel);
@@ -192,7 +220,7 @@ public class Main extends JPanel implements Runnable, KeyListener {
 
         // level 3
         else if (key == KeyEvent.VK_3 && screenType == 5) {
-            JDialog level3Dialog = new JDialog(frame, "Level 3", true);
+            level3Dialog = new JDialog(frame, "Level 3", true);
             Level3 myPanel = new Level3();
             level3Dialog.add(myPanel);
             level3Dialog.addKeyListener(myPanel);
