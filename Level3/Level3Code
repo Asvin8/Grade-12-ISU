@@ -98,18 +98,6 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
             checkCollision(walls[i]);
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Example");
-        Level3 myPanel = new Level3();
-        frame.add(myPanel);
-        frame.addKeyListener(myPanel);
-        frame.setVisible(true);
-        frame.pack();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
-    }
-
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
@@ -139,6 +127,11 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
             else if(i%3==2)
                 g2.drawImage(treedark, walls[i].x, walls[i].y, null);
         }
+
+        g2.drawImage(Main.mark, 785, 840/2, null);
+        g2.setFont(new Font("Arial", Font.PLAIN, 25));
+        g2.setColor(Color.WHITE);
+        g2.drawString(String.valueOf(Main.points), 785, 840/2 + 100);
 
         if(left){
             g2.drawImage(playerImageLeft, wong.x, wong.y, null);
@@ -213,7 +206,7 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
         else if(wong.x<monster.x){
             monster.x-=monSpeed;
         }
-        if(wong.y>monster.y){
+        if(wong.y>monster.y) {
             monster.y+=monSpeed;
         }
         else if(wong.y<monster.y){
@@ -242,7 +235,6 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
     void checkCollision(Rectangle wall) {
         //check if rect touches wall
         if (wong.intersects(wall)) {
-            System.out.println("collision");
             //stop the rect from moving
             double left1 = wong.getX();
             double right1 = wong.getX() + wong.getWidth();
@@ -252,7 +244,6 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
             double right2 = wall.getX() + wall.getWidth();
             double top2 = wall.getY();
             double bottom2 = wall.getY() + wall.getHeight();
-
             if (right1 > left2 &&
                     left1 < left2 &&
                     right1 - left2 < bottom1 - top2 &&
@@ -274,13 +265,13 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
             }
         }
 
-        if(wong.intersects(monster)){
+        if(wong.intersects(monster)) {
             wong.x=0;
             wong.y=0;
             monster.x=400;
             monster.y=400;
             battleDialog = new JDialog(new JFrame(),"battle", true);
-            Battle panel = new Battle(1);
+            Battle panel = new Battle(3);
             battleDialog.add(panel);
             battleDialog.addKeyListener(panel);
             battleDialog.setSize(840, 780);
@@ -292,6 +283,7 @@ public class Level3 extends JPanel implements Runnable, KeyListener {
         }
 
         if(wong.intersects(computerRect)){
+            Main.points += 1;
             wong.x=0;
             wong.y=0;
             monster.x=400;
