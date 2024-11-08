@@ -1,2 +1,2 @@
 # Grade-12-ISU
-this is our grade 12 isu lol
+A game to teach Java fundamentals, Object Oriented Programming, and Dynamic Data Structures
